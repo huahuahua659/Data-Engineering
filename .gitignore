@@ -218,3 +218,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---- 本项目：数据与模型产物不入库 ----
+# 原始数据、特征宽表、预测明细都可由 sql/ + src/ 重新生成
+data/
+*预测*.csv
+测试集预测结果.csv
+用户预测.csv
+*.cbm
+*.pkl
+*.joblib
