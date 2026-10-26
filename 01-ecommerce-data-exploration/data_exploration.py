@@ -13,18 +13,33 @@
 5. 数据分析建议
 
 依赖：pandas、numpy
-运行：python data_exploration.py
+运行：python data_exploration.py --data-dir ../data
 """
 
 import os
 import json
+import argparse
 import pandas as pd
 import numpy as np
 from datetime import datetime
 
 # ---------------- 配置 ----------------
-DATA_DIR = r"E:\博客\数据分析\data"
-OUTPUT_FILE = os.path.join(DATA_DIR, "data_exploration_report.txt")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def parse_args():
+    p = argparse.ArgumentParser(description="对目录下的数据文件生成 EDA 文本报告")
+    p.add_argument("--data-dir", default=os.path.join(BASE_DIR, "data"),
+                   help="待分析数据所在目录（默认 ./data）")
+    p.add_argument("--out", default=os.path.join(BASE_DIR, "outputs",
+                                                 "data_exploration_report.txt"),
+                   help="报告输出路径（默认 ./outputs/data_exploration_report.txt）")
+    return p.parse_args()
+
+
+ARGS = parse_args()
+DATA_DIR = ARGS.data_dir
+OUTPUT_FILE = ARGS.out
 
 # 支持的格式
 CSV_EXTS = {".csv"}
@@ -263,7 +278,7 @@ def analyze_file(path):
     n_rows, n_cols = df.shape
 
     section(f"文件分析：{name}")
-    w(f"文件路径     ：{path}")
+    w(f"文件路径     ：{name}")
     w(f"文件格式     ：{os.path.splitext(name)[1].lower()}（读取编码：{enc}）")
     w(f"数据规模     ：{n_rows} 行 × {n_cols} 列")
     w(f"内存占用(约) ：{df.memory_usage(deep=True).sum() / 1024 / 1024:.1f} MB")
@@ -334,6 +349,9 @@ def analyze_file(path):
                     w(f"    {c:<28}超出均值±3σ 的行数：{cnt_out}")
     if not found_any:
         w("    （数值字段分布总体集中，未发现明显离群点；极值多为高价商品，属合理范围）")
+    if "quantity" in df.columns:
+        w("    注：3σ 只适用于近似正态的连续变量。quantity 这类取值 1~3 的离散字段，")
+        w("        此处“超出”来自分布偏斜，不能当异常值处理。")
 
     # 数据格式问题
     date_issues = check_date_format(df)
@@ -501,7 +519,7 @@ def main():
 
     w(f"数据探索分析报告")
     w(f"生成时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    w(f"数据目录：{DATA_DIR}")
+    w(f"数据目录：{os.path.basename(os.path.normpath(DATA_DIR))}")
     w(f"发现数据文件 {len(files)} 个：")
     for f in files:
         w(f"  - {os.path.basename(f)}")
@@ -533,6 +551,7 @@ def main():
     analysis_suggestions()
 
     # 写入报告
+    os.makedirs(os.path.dirname(OUTPUT_FILE) or ".", exist_ok=True)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as fp:
         fp.write("\n".join(_lines))
 

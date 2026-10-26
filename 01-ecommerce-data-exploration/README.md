@@ -14,10 +14,10 @@
 ## 运行
 
 ```bash
-python data_exploration.py
+python data_exploration.py --data-dir ../data --out outputs/data_exploration_report.txt
 ```
 
-脚本里的数据目录是本地绝对路径，换机器要改一下。输出写到 `outputs/data_exploration_report.txt`。
+`--data-dir` 默认脚本同级的 `data/`，`--out` 默认 `outputs/data_exploration_report.txt`。报告里只写文件名，不带本机绝对路径。
 
 ## 关键发现
 

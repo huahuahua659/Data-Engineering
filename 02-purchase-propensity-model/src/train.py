@@ -1,4 +1,5 @@
 from pathlib import Path
+import argparse
 import warnings
 import numpy as np
 import pandas as pd
@@ -16,8 +17,14 @@ from catboost import CatBoostClassifier
 
 warnings.filterwarnings("ignore")
 
-FILE_PATH = Path(r"D:\数据挖掘\用户预测.csv")
-OUT_DIR = FILE_PATH.parent
+parser = argparse.ArgumentParser(description="用户购买倾向预测：LR 基线 + CatBoost")
+parser.add_argument("--input", default="user_features.csv",
+                    help="特征表 CSV，由 sql/features.sql 导出（默认 ./user_features.csv）")
+parser.add_argument("--out-dir", default="outputs", help="模型与结果输出目录（默认 ./outputs）")
+args = parser.parse_args()
+FILE_PATH = Path(args.input)
+OUT_DIR = Path(args.out_dir)
+OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 try:
     df = pd.read_csv(FILE_PATH, encoding="utf-8-sig")
@@ -109,7 +116,7 @@ pd.DataFrame({
     "prob_logistic": lr_prob, "prob_catboost": cat_prob,
     "pred_catboost_05": (cat_prob >= 0.5).astype(int)
 }).sort_values("prob_catboost", ascending=False).to_csv(
-    OUT_DIR / "测试集预测结果.csv", index=False, encoding="utf-8-sig")
+    OUT_DIR / "test_predictions.csv", index=False, encoding="utf-8-sig")
 
 # 全量重训最终模型并保存
 X_all = X.copy()
@@ -121,11 +128,11 @@ final = CatBoostClassifier(
     loss_function="Logloss", eval_metric="AUC", l2_leaf_reg=5, random_seed=42,
     verbose=False, allow_writing_files=False)
 final.fit(X_all, y, cat_features=cat_cols)
-final.save_model(str(OUT_DIR / "CatBoost用户购买预测模型.cbm"))
+final.save_model(str(OUT_DIR / "churn_model.cbm"))
 
 # 特征重要性
 imp = pd.DataFrame({"feature": final.feature_names_,
                     "importance": final.get_feature_importance()}).sort_values("importance", ascending=False)
-imp.to_csv(OUT_DIR / "特征重要性.csv", index=False, encoding="utf-8-sig")
+imp.to_csv(OUT_DIR / "feature_importance.csv", index=False, encoding="utf-8-sig")
 print("\n特征重要性 Top 10：")
 print(imp.head(10).to_string(index=False))

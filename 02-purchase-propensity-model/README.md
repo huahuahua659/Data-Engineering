@@ -49,8 +49,8 @@ Top 10% 高倾向用户命中率 74.88%，整体 41.97%，**Lift 1.78**。
 
 1. MySQL 中导入 `order`、`user` 两张表
 2. 执行 `sql/features.sql`，导出结果为 `user_features.csv`（约 13 MB，8.2 万行）
-3. 修改 `src/train.py` 顶部的 `FILE_PATH` 指向该文件，`python src/train.py`
+3. 运行 `python src/train.py --input user_features.csv`（`--out-dir` 默认 `outputs/`）
 
-脚本会输出指标、混淆矩阵、Top 10% Lift，并把测试集预测、全量重训模型、特征重要性写到数据文件同目录。
+脚本会输出指标、混淆矩阵、Top 10% Lift，并把测试集预测、全量重训模型、特征重要性写到 `--out-dir`。
 
-以下产物刻意没有提交：`user_features.csv`、`测试集预测结果.csv`、`CatBoost用户购买预测模型.cbm`。它们能由上面三步重新生成，且包含逐用户明细。
+以下产物刻意没有提交：`user_features.csv`、`test_predictions.csv`、`churn_model.cbm`。它们能由上面三步重新生成，且包含逐用户明细。仓库里的 `outputs/feature_importance.csv` 是其中唯一适合公开的产物。
